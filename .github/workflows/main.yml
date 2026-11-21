@@ -8,41 +8,36 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Download repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Python 3.12
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Install Java 17
-        uses: actions/setup-java@v4
+      - name: Setup Java
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
 
-      - name: Install Android SDK
+      - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: ''
 
-      - name: Install Android components
+      - name: Install SDK components
+        shell: pwsh
         run: |
-          sdkmanager "platforms;android-34" "build-tools;36.1.0" "ndk;27.3.13750724"
+          sdkmanager --install "platforms;android-34" "build-tools;36.1.0" "ndk;27.3.13750724"
 
-      - name: Install Python dependencies
+      - name: Install Python requirements
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-build.txt
 
-      - name: Check build configuration
-        shell: pwsh
-        run: |
-          if (!(Test-Path "build.local.json")) {
-            Write-Error "build.local.json is missing"
-            exit 1
-          }
-
-      - name: Build APK
+      - name: Build
         shell: pwsh
         run: |
           ./tools/build_offline_app.ps1 -Python python
@@ -53,4 +48,3 @@ jobs:
           name: FL-Royale-APK
           path: dist/*.apk
           if-no-files-found: error
-          retention-days: 7
