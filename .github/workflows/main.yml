@@ -1,8 +1,16 @@
-name: Build FL Royale APK
+      - name: Create build configuration
+        shell: pwsh
+        run: |
+          Copy-Item build.example.json build.local.json
 
-on:
-  workflow_dispatch:
+          $config = Get-Content build.local.json -Raw | ConvertFrom-Json
 
+          $config.firstlight_cr = ""
+          $config.runtime_update = "user-provided/runtime-update"
+          $config.java_home = $env:JAVA_HOME
+          $config.android_sdk = $env:ANDROID_HOME
+
+          $config | ConvertTo-Json -Depth 10 | Set-Content build.local.json
 jobs:
   build:
     runs-on: windows-latest
