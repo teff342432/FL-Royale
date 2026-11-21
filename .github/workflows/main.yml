@@ -1,5 +1,5 @@
-
-name: Build FL Royale APK
+```yaml
+name: FL Royale Android Build
 
 on:
   workflow_dispatch:
@@ -15,41 +15,51 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: '3.11'
 
       - name: Setup Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '17'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          accept-android-sdk-licenses: true
 
       - name: Install Android SDK components
         shell: pwsh
         run: |
-          sdkmanager --install "platforms;android-34" "build-tools;36.1.0" "ndk;27.3.13750724"
-
-      - name: Create local build configuration
-        shell: pwsh
-        run: |
-          Copy-Item tools/build.example.json tools/build.local.json
+          sdkmanager --install "platforms;android-34" "build-tools;36.1.0"
 
       - name: Install Python dependencies
         shell: pwsh
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements-build.txt
+          if (Test-Path requirements-build.txt) {
+            pip install -r requirements-build.txt
+          }
+
+      - name: Prepare build configuration
+        shell: pwsh
+        run: |
+          if (Test-Path tools/build.example.json) {
+            Copy-Item tools/build.example.json tools/build.local.json
+          }
 
       - name: Build FL Royale
         shell: pwsh
         run: |
-          ./tools/build_offline_app.ps1 -Python python
+          python tools/build.py
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: FL-Royale-APK
-          path: dist/*.apk
+          path: |
+            **/*.apk
           if-no-files-found: error
+          retention-days: 7
+```
