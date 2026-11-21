@@ -1,22 +1,15 @@
-      - name: Create build configuration
-        shell: pwsh
-        run: |
-          Copy-Item build.example.json build.local.json
 
-          $config = Get-Content build.local.json -Raw | ConvertFrom-Json
+name: Build FL Royale APK
 
-          $config.firstlight_cr = ""
-          $config.runtime_update = "user-provided/runtime-update"
-          $config.java_home = $env:JAVA_HOME
-          $config.android_sdk = $env:ANDROID_HOME
+on:
+  workflow_dispatch:
 
-          $config | ConvertTo-Json -Depth 10 | Set-Content build.local.json
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Python
@@ -32,20 +25,24 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          packages: ''
 
-      - name: Install SDK components
+      - name: Install Android SDK components
         shell: pwsh
         run: |
           sdkmanager --install "platforms;android-34" "build-tools;36.1.0" "ndk;27.3.13750724"
 
-      - name: Install Python requirements
+      - name: Create local build configuration
+        shell: pwsh
+        run: |
+          Copy-Item tools/build.example.json tools/build.local.json
+
+      - name: Install Python dependencies
+        shell: pwsh
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-build.txt
 
-      - name: Build
+      - name: Build FL Royale
         shell: pwsh
         run: |
           ./tools/build_offline_app.ps1 -Python python
